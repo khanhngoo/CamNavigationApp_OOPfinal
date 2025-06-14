@@ -1,23 +1,27 @@
 [
   {
-    "from": "F",
-    "to": "K"
+    "from": "I",
+    "to": "I-A"
   },
   {
-    "from": "F",
-    "to": "J"
+    "from": "I-A",
+    "to": "A"
   },
   {
-    "from": "H",
-    "to": "Field"
+    "from": "Square",
+    "to": "F1"
   },
   {
-    "from": "J",
-    "to": "H"
+    "from": "F1",
+    "to": "E1"
   },
   {
-    "from": "H",
-    "to": "D"
+    "from": "E1",
+    "to": "E2"
+  },
+  {
+    "from": "E2",
+    "to": "C2"
   },
   {
     "from": "C2",
@@ -36,12 +40,12 @@
     "to": "C"
   },
   {
-    "from": "K",
+    "from": "A1",
     "to": "A"
   },
   {
-    "from": "J",
-    "to": "A"
+    "from": "G1",
+    "to": "G"
   },
   {
     "from": "H2",
@@ -62,9 +66,5 @@
   {
     "from": "Field",
     "to": "A1"
-  },
-  {
-    "from": "Auditorium",
-    "to": "K"
   }
 ]

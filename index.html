@@ -30,6 +30,7 @@ let locations = {};
 let routeControl = null;
 let fixedLineControl = null;
 let manualLines = [];
+let highlightedMarkers = []; // ✅ NEW: Track temporary markers
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 20,
@@ -44,7 +45,6 @@ fetch('vinuni_locations.json')
     locations = data;
     const list = document.getElementById('location-list');
     for (let id in data) {
-      L.marker([data[id].lat, data[id].lng]).addTo(map).bindPopup(`<b>${data[id].name}</b>`);
       const opt = document.createElement('option');
       opt.value = id;
       list.appendChild(opt);
@@ -74,6 +74,10 @@ function drawRoute() {
   manualLines.forEach(l => map.removeLayer(l));
   manualLines = [];
 
+  // ✅ Remove old markers
+  highlightedMarkers.forEach(m => map.removeLayer(m));
+  highlightedMarkers = [];
+
   if (isFixedEdge(start, end)) {
     const from = locations[start], to = locations[end];
     fixedLineControl = L.Routing.control({
@@ -84,6 +88,14 @@ function drawRoute() {
       addWaypoints: false,
       routeWhileDragging: false
     }).addTo(map);
+
+    // ✅ Add markers for from and to
+    [start, end].forEach(id => {
+      const p = locations[id];
+      const mk = L.marker([p.lat, p.lng]).addTo(map).bindPopup(p.name);
+      highlightedMarkers.push(mk);
+    });
+
   } else {
     fetch('/save-input', {
       method: 'POST',
@@ -94,6 +106,7 @@ function drawRoute() {
     .then(data => {
       const route = data.route;
       if (!route || route.length < 2) return alert("No route found");
+
       for (let i = 0; i < route.length - 1; i++) {
         const f = locations[route[i]];
         const t = locations[route[i + 1]];
@@ -102,6 +115,13 @@ function drawRoute() {
         }).addTo(map);
         manualLines.push(line);
       }
+
+      // ✅ Add markers for each point in the route
+      route.forEach(id => {
+        const p = locations[id];
+        const mk = L.marker([p.lat, p.lng]).addTo(map).bindPopup(p.name);
+        highlightedMarkers.push(mk);
+      });
     });
   }
 }
