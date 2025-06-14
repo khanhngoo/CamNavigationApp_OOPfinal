@@ -7,6 +7,7 @@ import ChatMessages from "@/components/chat-messages"
 import CampusMap from "@/components/campus-map"
 import type { Message } from "@/lib/types"
 import { processPrompt } from "@/lib/ai-navigation"
+import LeafletMap from "@/components/leaflet-map"
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([
@@ -101,7 +102,7 @@ export default function Home() {
         {/* Map - Larger on both mobile and desktop */}
         {showMap && (
           <div className="h-[50vh] w-full md:h-auto md:w-2/3 md:flex-shrink-0">
-            <CampusMap />
+            <LeafletMap />
           </div>
         )}
 
