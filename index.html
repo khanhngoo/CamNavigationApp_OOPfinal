@@ -30,15 +30,16 @@ let locations = {};
 let routeControl = null;
 let fixedLineControl = null;
 let manualLines = [];
-let highlightedMarkers = []; // ✅ NEW: Track temporary markers
+let highlightedMarkers = []; 
+let fixedEdges = [];
+let allMarkers = []; // NEW: keep hidden markers for later
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 20,
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-let fixedEdges = [];
-
+// Load locations and create hidden markers
 fetch('vinuni_locations.json')
   .then(res => res.json())
   .then(data => {
@@ -48,6 +49,11 @@ fetch('vinuni_locations.json')
       const opt = document.createElement('option');
       opt.value = id;
       list.appendChild(opt);
+
+      // create hidden markers
+      const marker = L.marker([data[id].lat, data[id].lng], { opacity: 0 });
+      marker.addTo(map);
+      allMarkers[id] = marker;
     }
     loadFixedEdges();
   });
@@ -69,15 +75,20 @@ function drawRoute() {
   const end = document.getElementById('end').value.trim();
   if (!locations[start] || !locations[end]) return alert("Invalid location");
 
+  // Clear previous routes and markers
   if (routeControl) { map.removeControl(routeControl); routeControl = null; }
   if (fixedLineControl) { map.removeControl(fixedLineControl); fixedLineControl = null; }
   manualLines.forEach(l => map.removeLayer(l));
   manualLines = [];
-
-  // ✅ Remove old markers
   highlightedMarkers.forEach(m => map.removeLayer(m));
   highlightedMarkers = [];
 
+  // Hide all static markers again
+  for (let id in allMarkers) {
+    allMarkers[id].setOpacity(0);
+  }
+
+  // Case 1: using OSRM (fixed edge)
   if (isFixedEdge(start, end)) {
     const from = locations[start], to = locations[end];
     fixedLineControl = L.Routing.control({
@@ -89,14 +100,14 @@ function drawRoute() {
       routeWhileDragging: false
     }).addTo(map);
 
-    // ✅ Add markers for from and to
     [start, end].forEach(id => {
       const p = locations[id];
-      const mk = L.marker([p.lat, p.lng]).addTo(map).bindPopup(p.name);
+      const mk = L.marker([p.lat, p.lng], { opacity: 1 }).addTo(map).bindPopup(p.name);
       highlightedMarkers.push(mk);
     });
 
   } else {
+    // Case 2: draw route from Java result
     fetch('/save-input', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -104,7 +115,7 @@ function drawRoute() {
     })
     .then(res => res.json())
     .then(data => {
-      const route = data.route;
+      const route = data.route?.map(id => id.trim());
       if (!route || route.length < 2) return alert("No route found");
 
       for (let i = 0; i < route.length - 1; i++) {
@@ -116,10 +127,9 @@ function drawRoute() {
         manualLines.push(line);
       }
 
-      // ✅ Add markers for each point in the route
       route.forEach(id => {
         const p = locations[id];
-        const mk = L.marker([p.lat, p.lng]).addTo(map).bindPopup(p.name);
+        const mk = L.marker([p.lat, p.lng], { opacity: 1 }).addTo(map).bindPopup(p.name);
         highlightedMarkers.push(mk);
       });
     });
@@ -128,3 +138,4 @@ function drawRoute() {
 </script>
 </body>
 </html>
+
